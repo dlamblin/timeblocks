@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<head>
+	<style type="text/css">
+	body {
+		font: 10pt sans-serif;
+	}
+	#timeblock div {
+		background-color: steelblue;
+		text-align: right;
+		padding: 3px;
+		margin: 1px;
+		color: white;
+	}
+	</style>
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script charset="utf-8">
+	console.log("script");
+	var timeData = [
+		{"key": "m1", "label": "Rising, dress etc","wday":0, "begin":600, "end":700},
+		{"key": "m2", "label": "Prep Sophie","wday":0, "begin":700, "end":725},
+		{"key": "m3", "label": "Transit to OLP","wday":0, "begin":730, "end":800},
+		{"key": "t1", "label": "Rising, dress etc","wday":1, "begin":600, "end":700},
+		{"key": "w1", "label": "Rising, dress etc","wday":2, "begin":600, "end":700},
+		{"key": "r1", "label": "Rising, dress etc","wday":3, "begin":600, "end":700},
+		{"key": "f1", "label": "Rising, dress etc","wday":4, "begin":600, "end":700}
+	];
+	
+	var scaleX = d3.scale.linear()
+		.domain([d3.min(timeData, function(d) {return d.begin}), d3.max(timeData, function(d) {return d.end})])
+		.range([0, 420]);
+
+
+	function d3Update() {
+		console.log("d3Update");
+		// Update…
+		var p = d3.select("#timeblock").selectAll("div")
+			.data(timeData)
+			.text(function(d) { return d.label; });
+		
+		// Enter…
+		p.enter()
+			.append("div")
+			.style("width", function(d) {console.log(scaleX(d.end) - scaleX(d.begin)); return (scaleX(d.end) - scaleX(d.begin)) + "px"})
+			.style("left",  function(d) {return scaleX(d.begin)})
+			.append("p")
+			.text(function(d) { return d.label; });
+		
+		// Exit…
+		p.exit().remove();
+	}
+	
+	window.onload = d3Update;
+</script>
+</head>
+<body>
+	<h1>A week of blocked time</h1>
+	<div id="timeblock"></div>
+</body>
