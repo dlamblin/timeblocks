@@ -39,13 +39,13 @@
         return timeFmt.parse((s.length < 4) ? '0' + s : s);
     }
 	var timeData = [
-		{"key": "m1", "label": "Rising, dress etc","wday":0, "begin":hm(6), "end":hm(7.00)},
-		{"key": "m2", "label": "Prep Sophie","wday":0, "begin":hm(7), "end":hm(7.30)},
-		{"key": "m3", "label": "Transit to School","wday":0, "begin":hm(7.30), "end":hm(8.00)},
-		{"key": "t1", "label": "Rising, dress etc","wday":1, "begin":hm(6.00), "end":hm(7.00)},
-		{"key": "w1", "label": "Rising, dress etc","wday":2, "begin":hm(6.00), "end":hm(7.00)},
-		{"key": "r1", "label": "Rising, dress etc","wday":3, "begin":hm(6.00), "end":hm(7.00)},
-		{"key": "f1", "label": "Rising, dress etc","wday":4, "begin":hm(6.00), "end":hm(7.00)}
+        { key: "m1", "wday": 0, "begin": hm( 6.00), "end": hm( 7.00), label: "Rising, dress etc" },
+        { key: "m2", "wday": 0, "begin": hm( 7.00), "end": hm( 7.30), label: "Prep Sophie" },
+        { key: "m3", "wday": 0, "begin": hm( 7.30), "end": hm( 8.00), label: "Transit to School" },
+        { key: "t1", "wday": 1, "begin": hm( 6.00), "end": hm( 7.00), label: "Rising, dress etc" },
+        { key: "w1", "wday": 2, "begin": hm( 6.00), "end": hm( 7.00), label: "Rising, dress etc" },
+        { key: "r1", "wday": 3, "begin": hm( 6.00), "end": hm( 7.00), label: "Rising, dress etc" },
+        { key: "f1", "wday": 4, "begin": hm( 6.00), "end": hm( 7.00), label: "Rising, dress etc" }
 	];
     var timeDataMap = d3.map(timeData, function(d) {return d.key;});
     timeDataMap.forEach(function(k,v) {v.end.setMinutes(v.end.getMinutes()-5);});
@@ -54,22 +54,24 @@
 
     function d3UpdateScales() {
         var svg = d3.select('#timeblock')[0][0],
+            margin = {top: 20, right: 20, bottom: 20, left: 80},
             width = svg.clientWidth,
             height = svg.clientHeight,
             weekdayDomain = [0,1,2,3,4,5,6];
         return scale = {
-            w:    width,
-            h:    height,
-            time: d3.time.scale.utc() // not d3.scale.linear()
-                .domain([d3.min(timeData, function(d) {return d.begin}),
-                    d3.max(timeData, function(d) {return d.end})])
-                .rangeRound([0, width]),
-            days: d3.scale.ordinal()
-                .domain(weekdayDomain)
-                .range('Mon Tue Wed Thu Fri Sat Sun'.split(' ')),
-            week: d3.scale.ordinal()
-                .domain(weekdayDomain)
-                .rangeRoundBands([0, height], 0.05),
+            margin: margin,
+            width:  width - margin.left - margin.right,
+            height: height - margin.top - margin.bottom,
+            time:   d3.time.scale.utc() // not d3.scale.linear()
+                    .domain([d3.min(timeData, function(d) {return d.begin}),
+                        d3.max(timeData, function(d) {return d.end})])
+                    .rangeRound([0, width]),
+            days:   d3.scale.ordinal()
+                    .domain(weekdayDomain)
+                    .range('Mon Tue Wed Thu Fri Sat Sun'.split(' ')),
+            week:   d3.scale.ordinal()
+                    .domain(weekdayDomain)
+                    .rangeRoundBands([0, height], 0.05),
         }	    	
     }
 
@@ -78,7 +80,7 @@
         var scale = d3UpdateScales(),
             xaxistop = d3.svg.axis().scale(scale.time).tickSize(10).orient('top'),
             xaxisbot = d3.svg.axis().scale(scale.time).tickSize(10),
-            yaxis = d3.svg.axis().scale(scale.days).tickSize(10);
+            yaxis = d3.svg.axis().scale(scale.days).tickSize(10).orient('right');
 
 		// Update…
         var svg = d3.select('#timeblock');
