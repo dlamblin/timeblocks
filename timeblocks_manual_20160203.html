@@ -9,42 +9,60 @@
         height: 420px;
     }
 	#timeblock rect {
-		fill: steelblue;
-        stroke: blue;
+		fill: lightblue;
+        stroke: lightgray;
         stroke-width: 2px;
 	}
     #timeblock text {
-        
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 11px;
+        fill: darkslategrey;
+    }
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: black;
+        shape-rendering: crispEdges;
+    }
+
+    .axis text {
+        font-family: sans-serif;
+        font-size: 11px;
     }
 	</style>
 <script src="d3/d3.min.js" not_src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <script charset="utf-8">
 	console.log("script");
-	var timeFmt = d3.time.format('%H%M');
-	function hm (i) { return timeFmt.parse(String(i)) }
+	var timeFmt = d3.time.format.utc('%H.%M');
+	function hm (i) {
+        var s = i.toFixed(2);
+        return timeFmt.parse((s.length < 4) ? '0' + s : s);
+    }
 	var timeData = [
-		{"key": "m1", "label": "Rising, dress etc","wday":0, "begin":hm(600), "end":hm(700)},
-		{"key": "m2", "label": "Prep Sophie","wday":0, "begin":hm(700), "end":hm(725)},
-		{"key": "m3", "label": "Transit to School","wday":0, "begin":hm(730), "end":hm(800)},
-		{"key": "t1", "label": "Rising, dress etc","wday":1, "begin":hm(600), "end":hm(700)},
-		{"key": "w1", "label": "Rising, dress etc","wday":2, "begin":hm(600), "end":hm(700)},
-		{"key": "r1", "label": "Rising, dress etc","wday":3, "begin":hm(600), "end":hm(700)},
-		{"key": "f1", "label": "Rising, dress etc","wday":4, "begin":hm(600), "end":hm(700)}
+		{"key": "m1", "label": "Rising, dress etc","wday":0, "begin":hm(6), "end":hm(7.00)},
+		{"key": "m2", "label": "Prep Sophie","wday":0, "begin":hm(7), "end":hm(7.30)},
+		{"key": "m3", "label": "Transit to School","wday":0, "begin":hm(7.30), "end":hm(8.00)},
+		{"key": "t1", "label": "Rising, dress etc","wday":1, "begin":hm(6.00), "end":hm(7.00)},
+		{"key": "w1", "label": "Rising, dress etc","wday":2, "begin":hm(6.00), "end":hm(7.00)},
+		{"key": "r1", "label": "Rising, dress etc","wday":3, "begin":hm(6.00), "end":hm(7.00)},
+		{"key": "f1", "label": "Rising, dress etc","wday":4, "begin":hm(6.00), "end":hm(7.00)}
 	];
     var timeDataMap = d3.map(timeData, function(d) {return d.key;});
-    timeDataMap.forEach(function(k,v) {v.end.setMinutes(-5);});
+    timeDataMap.forEach(function(k,v) {v.end.setMinutes(v.end.getMinutes()-5);});
     timeData = timeDataMap.values();
+    var scale;
 
     function d3UpdateScales() {
-        var svg = d3.select('#timeblock')[0][0];
-        var width = svg.clientWidth;
-        var height = svg.clientHeight;
-        var weekdayDomain = [0,1,2,3,4,5,6];
-        return {
-            w: width,
-            h: height,
-            time: d3.scale.linear()
-                .domain([d3.min(timeData, function(d) {return d.begin}), d3.max(timeData, function(d) {return d.end})])
+        var svg = d3.select('#timeblock')[0][0],
+            width = svg.clientWidth,
+            height = svg.clientHeight,
+            weekdayDomain = [0,1,2,3,4,5,6];
+        return scale = {
+            w:    width,
+            h:    height,
+            time: d3.time.scale.utc() // not d3.scale.linear()
+                .domain([d3.min(timeData, function(d) {return d.begin}),
+                    d3.max(timeData, function(d) {return d.end})])
                 .rangeRound([0, width]),
             days: d3.scale.ordinal()
                 .domain(weekdayDomain)
@@ -57,9 +75,14 @@
 
 	function d3Update() {
 		console.log("d3Update");
-        var scale = d3UpdateScales();
+        var scale = d3UpdateScales(),
+            xaxistop = d3.svg.axis().scale(scale.time).tickSize(10).orient('top'),
+            xaxisbot = d3.svg.axis().scale(scale.time).tickSize(10),
+            yaxis = d3.svg.axis().scale(scale.days).tickSize(10);
+
 		// Update…
-		var g = d3.select("#timeblock").selectAll("g")
+        var svg = d3.select('#timeblock');
+		var g = svg.selectAll("g")
 			.data(timeData);
 		
 		// Enter…
@@ -79,6 +102,10 @@
 		
 		// Exit…
 		g.exit().remove();
+        
+        svg.append("g").attr('class', 'axis').attr('transform', 'translate(0 -50)').call(xaxistop);
+        svg.append("g").attr('class', 'axis').attr('transform', 'translate(0 300)').call(xaxisbot);
+        svg.append("g").attr('class', 'axis').call(yaxis);
 	}
 	
 	window.onload = d3Update;
