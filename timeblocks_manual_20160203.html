@@ -33,7 +33,8 @@
 <script src="d3/d3.min.js" not_src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <script charset="utf-8">
 	console.log("script");
-	var timeFmt = d3.time.format.utc('%H.%M');
+	var timeFmt = d3.time.format.utc('%H.%M'),
+        weekday = 'Mon Tue Wed Thu Fri Sat Sun'.split(' ');
 	function hm (i) {
         var s = i.toFixed(2);
         return timeFmt.parse((s.length < 4) ? '0' + s : s);
@@ -54,23 +55,22 @@
 
     function d3UpdateScales() {
         var svg = d3.select('#timeblock')[0][0],
-            margin = {top: 20, right: 20, bottom: 20, left: 80},
-            width = svg.clientWidth,
-            height = svg.clientHeight,
-            weekdayDomain = [0,1,2,3,4,5,6];
+            margin = {top: 25, right: 80, bottom: 25, left: 80},
+            width = svg.clientWidth - margin.left - margin.right,
+            height = svg.clientHeight - margin.top - margin.bottom;
         return scale = {
             margin: margin,
-            width:  width - margin.left - margin.right,
-            height: height - margin.top - margin.bottom,
+            width:  width,
+            height: height,
             time:   d3.time.scale.utc() // not d3.scale.linear()
                     .domain([d3.min(timeData, function(d) {return d.begin}),
                         d3.max(timeData, function(d) {return d.end})])
                     .rangeRound([0, width]),
             days:   d3.scale.ordinal()
-                    .domain(weekdayDomain)
-                    .range('Mon Tue Wed Thu Fri Sat Sun'.split(' ')),
+                    .domain(weekday)
+                    .rangePoints([0, height]),
             week:   d3.scale.ordinal()
-                    .domain(weekdayDomain)
+                    .domain(weekday)
                     .rangeRoundBands([0, height], 0.05),
         }	    	
     }
@@ -78,36 +78,59 @@
 	function d3Update() {
 		console.log("d3Update");
         var scale = d3UpdateScales(),
-            xaxistop = d3.svg.axis().scale(scale.time).tickSize(10).orient('top'),
-            xaxisbot = d3.svg.axis().scale(scale.time).tickSize(10),
-            yaxis = d3.svg.axis().scale(scale.days).tickSize(10).orient('right');
+            xaxis_t = d3.svg.axis().scale(scale.time).tickSize(10).orient('top'),
+            yaxis_r = d3.svg.axis().scale(scale.week).tickSize(7).orient('right');
+            xaxis_b = d3.svg.axis().scale(scale.time).tickSize(10),
+            yaxis_l = d3.svg.axis().scale(scale.week).tickSize(7).orient('left');
 
 		// Update…
         var svg = d3.select('#timeblock');
-		var g = svg.selectAll("g")
+        if (svg.select('g.view')[0][0] == null) {
+            svg.append('g').attr('class', 'view').attr('transform', 'translate(' + scale.margin.left + ',' + scale.margin.top + ')');
+        }
+		var g = svg.select('g.view').selectAll('g.data')
 			.data(timeData);
 		
 		// Enter…
 		var ge = g.enter()
 			.append("g")
+            .attr('class', 'data');
 
         ge.append("rect")
             .attr("x", function(d) {return scale.time(d.begin)})
-            .attr("y", function(d) {return scale.week(d.wday)})
+            .attr("y", function(d) {return scale.week(weekday[d.wday])})
 			.attr("width", function(d) {return (scale.time(d.end) - scale.time(d.begin))})
 			.attr("height",  function(d) {return scale.week.rangeBand()});
 		ge.append("text")
             .attr("x", function(d) {return scale.time(d.begin)})
-            .attr("y", function(d) {return scale.week(d.wday) + scale.week.rangeBand() / 2})
+            .attr("y", function(d) {
+                return scale.week(weekday[d.wday]) + scale.week.rangeBand() / 2})
             .attr("dy", ".35em")
 			.text(function(d) { return d.label; });
 		
 		// Exit…
 		g.exit().remove();
         
-        svg.append("g").attr('class', 'axis').attr('transform', 'translate(0 -50)').call(xaxistop);
-        svg.append("g").attr('class', 'axis').attr('transform', 'translate(0 300)').call(xaxisbot);
-        svg.append("g").attr('class', 'axis').call(yaxis);
+        svg.append("g").attr('class', 'axis')
+            .attr('transform', 'translate('
+                + String(scale.margin.left) + ','
+                + String(scale.margin.top) + ')')
+            .call(xaxis_t);
+        svg.append("g").attr('class', 'axis')
+            .attr('transform', 'translate('
+                + String(scale.margin.left) + ','
+                + String(scale.height + scale.margin.top) + ')')
+            .call(xaxis_b);
+        svg.append("g").attr('class', 'axis')
+            .attr('transform', 'translate('
+                + String(scale.margin.left - 5) + ','
+                + String(scale.margin.top) + ')')
+            .call(yaxis_l);
+        svg.append("g").attr('class', 'axis')
+            .attr('transform', 'translate('
+                + String(scale.margin.left + scale.width + 5) + ','
+                + String(scale.margin.top) + ')')
+            .call(yaxis_r);
 	}
 	
 	window.onload = d3Update;
