@@ -23,7 +23,8 @@
 	}
     #timeblock text {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        font-size: 11px;
+        font-size: 12px;
+        font-weight: 600;
         fill: darkslategrey;
     }
     .axis path,
@@ -51,10 +52,24 @@
         { key: "m1", "wday": 0, "begin": hm( 6.00), "end": hm( 7.00), label: "Rising, dress etc\n\retc" },
         { key: "m2", "wday": 0, "begin": hm( 7.00), "end": hm( 7.30), label: "Prep Sophie" },
         { key: "m3", "wday": 0, "begin": hm( 7.30), "end": hm( 8.00), label: "Transit to School" },
+
         { key: "t1", "wday": 1, "begin": hm( 6.00), "end": hm( 7.00), label: "Rising, dress etc" },
         { key: "t2", "wday": 1, "begin": hm(17.00), "end": hm(18.00), label: "call" },
-        { key: "w1", "wday": 2, "begin": hm( 6.00), "end": hm( 7.00), label: "Rising, dress etc" },
+
+        { key: "w1", "wday": 2, "begin": hm( 6.00), "end": hm( 7.00), 'color': 0, label: "Rising, dress etc" },
+        { key: "w2", "wday": 2, "begin": hm( 7.00), "end": hm( 7.30), 'color': 0, label: "Prep Sophie" },
+        { key: "w3", "wday": 2, "begin": hm( 7.30), "end": hm( 8.00), 'color': 1, label: "Transit to School" },
+        { key: "w4", "wday": 2, "begin": hm( 8.00), "end": hm( 9.00), 'color': 2, label: "Read Emails" },
+        { key: "w5", "wday": 2, "begin": hm( 9.00), "end": hm(10.00), 'color': 2, label: "Write Emails" },
+        { key: "w6", "wday": 2, "begin": hm(10.00), "end": hm(13.00), 'color': 3, label: "Job" },
+        { key: "w7", "wday": 2, "begin": hm(13.00), "end": hm(14.00), 'color': 4, label: "Lunch & Meditation" },
+        { key: "w8", "wday": 2, "begin": hm(14.00), "end": hm(15.00), 'color': 5, label: "Pick Sophie & Home" },
+        { key: "w9", "wday": 2, "begin": hm(15.00), "end": hm(18.00), 'color': 0, label: "Clean" },
+        { key: "wa", "wday": 2, "begin": hm(18.00), "end": hm(19.00), 'color': 0, label: "Plan" },
+        { key: "wb", "wday": 2, "begin": hm(19.00), "end": hm(20.00), 'color': 0, label: "Wrap: Read Email & Clean" },
+
         { key: "r1", "wday": 3, "begin": hm( 6.00), "end": hm( 7.00), label: "Rising, dress etc" },
+
         { key: "f1", "wday": 4, "begin": hm( 6.00), "end": hm( 7.00), label: "Rising, dress etc" }
 	];
     timeData = timeData.sort(function(a,b) {
@@ -64,7 +79,7 @@
     var timeDataMap = d3.map(timeData, function(d) {return d.key;});
     timeDataMap.forEach(function(k,v) {v.end.setMinutes(v.end.getMinutes()-5);});
     timeData = timeDataMap.values();
-    var scale;
+    var scale, colors = d3.scale.category10();
 
     function d3UpdateScales() {
         var svg = d3.select('#timeblock')[0][0],
@@ -113,12 +128,13 @@
             .attr("x", function(d) {return scale.week(weekday[d.wday])})
             .attr("y", function(d) {return scale.time(d.begin)})
 			.attr("width",  function(d) {return scale.week.rangeBand()})
-			.attr("height", function(d) {return (scale.time(d.end) - scale.time(d.begin))});
+			.attr("height", function(d) {return (scale.time(d.end) - scale.time(d.begin))})
+            .attr("style", function(d) {return ("color" in d) ? "fill:" + colors(d.color) : null});
 		ge.append("text")
             .attr("x", function(d) {
-                return scale.week(weekday[d.wday]) + 2})
+                return scale.week(weekday[d.wday]) + 5})
             .attr("y", function(d) {return scale.time(d.begin)})
-            .attr("dy", ".85em")
+            .attr("dy", "1.1em")
 			.text(function(d) { return d.label; });
 		
 		// Exit…
