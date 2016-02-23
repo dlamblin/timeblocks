@@ -40,10 +40,11 @@
         return timeFmt.parse((s.length < 4) ? '0' + s : s);
     }
 	var timeData = [
-        { key: "m1", "wday": 0, "begin": hm( 6.00), "end": hm( 7.00), label: "Rising, dress etc" },
+        { key: "m1", "wday": 0, "begin": hm( 6.00), "end": hm( 7.00), label: "Rising, dress etc\n\retc" },
         { key: "m2", "wday": 0, "begin": hm( 7.00), "end": hm( 7.30), label: "Prep Sophie" },
         { key: "m3", "wday": 0, "begin": hm( 7.30), "end": hm( 8.00), label: "Transit to School" },
         { key: "t1", "wday": 1, "begin": hm( 6.00), "end": hm( 7.00), label: "Rising, dress etc" },
+        { key: "t2", "wday": 1, "begin": hm(17.00), "end": hm(18.00), label: "call" },
         { key: "w1", "wday": 2, "begin": hm( 6.00), "end": hm( 7.00), label: "Rising, dress etc" },
         { key: "r1", "wday": 3, "begin": hm( 6.00), "end": hm( 7.00), label: "Rising, dress etc" },
         { key: "f1", "wday": 4, "begin": hm( 6.00), "end": hm( 7.00), label: "Rising, dress etc" }
@@ -65,23 +66,23 @@
             time:   d3.time.scale.utc() // not d3.scale.linear()
                     .domain([d3.min(timeData, function(d) {return d.begin}),
                         d3.max(timeData, function(d) {return d.end})])
-                    .rangeRound([0, width]),
+                    .rangeRound([0, height]),
             days:   d3.scale.ordinal()
                     .domain(weekday)
-                    .rangePoints([0, height]),
+                    .rangePoints([0, width]),
             week:   d3.scale.ordinal()
                     .domain(weekday)
-                    .rangeRoundBands([0, height], 0.05),
+                    .rangeRoundBands([0, width], 0.05),
         }	    	
     }
 
 	function d3Update() {
 		console.log("d3Update");
         var scale = d3UpdateScales(),
-            xaxis_t = d3.svg.axis().scale(scale.time).tickSize(10).orient('top'),
-            yaxis_r = d3.svg.axis().scale(scale.week).tickSize(7).orient('right');
-            xaxis_b = d3.svg.axis().scale(scale.time).tickSize(10),
-            yaxis_l = d3.svg.axis().scale(scale.week).tickSize(7).orient('left');
+            xaxis_t = d3.svg.axis().scale(scale.week).tickSize(13).orient('top'),
+            yaxis_r = d3.svg.axis().scale(scale.time).tickSize(7).orient('right');
+            xaxis_b = d3.svg.axis().scale(scale.week).tickSize(13),
+            yaxis_l = d3.svg.axis().scale(scale.time).tickSize(7).orient('left');
 
 		// Update…
         var svg = d3.select('#timeblock');
@@ -97,15 +98,15 @@
             .attr('class', 'data');
 
         ge.append("rect")
-            .attr("x", function(d) {return scale.time(d.begin)})
-            .attr("y", function(d) {return scale.week(weekday[d.wday])})
-			.attr("width", function(d) {return (scale.time(d.end) - scale.time(d.begin))})
-			.attr("height",  function(d) {return scale.week.rangeBand()});
+            .attr("x", function(d) {return scale.week(weekday[d.wday])})
+            .attr("y", function(d) {return scale.time(d.begin)})
+			.attr("width",  function(d) {return scale.week.rangeBand()})
+			.attr("height", function(d) {return (scale.time(d.end) - scale.time(d.begin))});
 		ge.append("text")
-            .attr("x", function(d) {return scale.time(d.begin)})
-            .attr("y", function(d) {
-                return scale.week(weekday[d.wday]) + scale.week.rangeBand() / 2})
-            .attr("dy", ".35em")
+            .attr("x", function(d) {
+                return scale.week(weekday[d.wday]) + 2})
+            .attr("y", function(d) {return scale.time(d.begin)})
+            .attr("dy", ".85em")
 			.text(function(d) { return d.label; });
 		
 		// Exit…
