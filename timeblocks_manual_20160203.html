@@ -4,13 +4,18 @@
 	body {
 		font: 10pt sans-serif;
 	}
-	#timeblock div {
-		background-color: steelblue;
-		text-align: right;
-		padding: 3px;
-		margin: 1px;
-		color: white;
+    #timeblock {
+        width: 100%;
+        height: 420px;
+    }
+	#timeblock rect {
+		fill: steelblue;
+        stroke: blue;
+        stroke-width: 2px;
 	}
+    #timeblock text {
+        
+    }
 	</style>
 <script src="d3/d3.min.js" not_src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <script charset="utf-8">
@@ -26,29 +31,54 @@
 		{"key": "r1", "label": "Rising, dress etc","wday":3, "begin":hm(600), "end":hm(700)},
 		{"key": "f1", "label": "Rising, dress etc","wday":4, "begin":hm(600), "end":hm(700)}
 	];
-	
-	var timeScale = d3.scale.linear()
-		.domain([d3.min(timeData, function(d) {return d.begin}), d3.max(timeData, function(d) {return d.end})])
-		.range([0, 420]);
+    var timeDataMap = d3.map(timeData, function(d) {return d.key;});
+    timeDataMap.forEach(function(k,v) {v.end.setMinutes(-5);});
+    timeData = timeDataMap.values();
 
+    function d3UpdateScales() {
+        var svg = d3.select('#timeblock')[0][0];
+        var width = svg.clientWidth;
+        var height = svg.clientHeight;
+        var weekdayDomain = [0,1,2,3,4,5,6];
+        return {
+            w: width,
+            h: height,
+            time: d3.scale.linear()
+                .domain([d3.min(timeData, function(d) {return d.begin}), d3.max(timeData, function(d) {return d.end})])
+                .rangeRound([0, width]),
+            days: d3.scale.ordinal()
+                .domain(weekdayDomain)
+                .range('Mon Tue Wed Thu Fri Sat Sun'.split(' ')),
+            week: d3.scale.ordinal()
+                .domain(weekdayDomain)
+                .rangeRoundBands([0, height], 0.05),
+        }	    	
+    }
 
 	function d3Update() {
 		console.log("d3Update");
+        var scale = d3UpdateScales();
 		// Update…
-		var p = d3.select("#timeblock").selectAll("div")
-			.data(timeData)
-			.text(function(d) { return d.label; });
+		var g = d3.select("#timeblock").selectAll("g")
+			.data(timeData);
 		
 		// Enter…
-		p.enter()
-			.append("div")
-			.style("width", function(d) {return (timeScale(d.end) - timeScale(d.begin)) + "px"})
-			.style("left",  function(d) {return timeScale(d.begin) + "px"})
-			.append("p")
+		var ge = g.enter()
+			.append("g")
+
+        ge.append("rect")
+            .attr("x", function(d) {return scale.time(d.begin)})
+            .attr("y", function(d) {return scale.week(d.wday)})
+			.attr("width", function(d) {return (scale.time(d.end) - scale.time(d.begin))})
+			.attr("height",  function(d) {return scale.week.rangeBand()});
+		ge.append("text")
+            .attr("x", function(d) {return scale.time(d.begin)})
+            .attr("y", function(d) {return scale.week(d.wday) + scale.week.rangeBand() / 2})
+            .attr("dy", ".35em")
 			.text(function(d) { return d.label; });
 		
 		// Exit…
-		p.exit().remove();
+		g.exit().remove();
 	}
 	
 	window.onload = d3Update;
@@ -56,5 +86,6 @@
 </head>
 <body>
 	<h1>A week of blocked time</h1>
-	<div id="timeblock"></div>
+	<svg id="timeblock">
+    </svg>
 </body>
