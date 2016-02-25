@@ -76,9 +76,10 @@
         var o = d3.ascending(a.wday, b.wday);
         return o===0 ? d3.ascending(a.begin, b.begin) : o;
     });
-    var timeDataMap = d3.map(timeData, function(d) {return d.key;});
-    timeDataMap.forEach(function(k,v) {v.end.setMinutes(v.end.getMinutes()-5);});
-    timeData = timeDataMap.values();
+    // Spacing out times by 5 minutes... see display
+    // var timeDataMap = d3.map(timeData, function(d) {return d.key;});
+    // timeDataMap.forEach(function(k,v) {v.end.setMinutes(v.end.getMinutes()-5);});
+    // timeData = timeDataMap.values();
     var scale, colors = d3.scale.category10();
 
     function d3UpdateScales() {
@@ -126,7 +127,9 @@
 
         ge.append("rect")
             .attr("x", function(d) {return scale.week(weekday[d.wday]) + (scale.week.rangeBand() / 2)})
-            .attr("y", function(d) {return scale.time(d.begin) + ((scale.time(d.end) - scale.time(d.begin)) / 2)})
+            .attr("y", function(d) {
+                var e = new Date(d.end); e.setMinutes(e.getMinutes() - 5);
+                return scale.time(d.begin) + ((scale.time(e) - scale.time(d.begin)) / 2)})
 			.attr("width", 0)
 			.attr("height", 0)
             .attr("style", function(d) {return ("color" in d) ? "fill:" + colors(d.color) : null})
@@ -134,7 +137,9 @@
             .attr("x", function(d) {return scale.week(weekday[d.wday])})
             .attr("y", function(d) {return scale.time(d.begin)})
 			.attr("width",  function(d) {return scale.week.rangeBand()})
-			.attr("height", function(d) {return (scale.time(d.end) - scale.time(d.begin))})
+			.attr("height", function(d) {
+                var e = new Date(d.end); e.setMinutes(e.getMinutes() - 5);                
+                return (scale.time(e) - scale.time(d.begin))})
 		ge.append("text")
             .attr("x", function(d) {
                 return scale.week(weekday[d.wday]) + 5})
