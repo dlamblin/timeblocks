@@ -19,7 +19,7 @@
 	#timeblock rect {
 		fill: lightblue;
         stroke: lightgray;
-        stroke-width: 2px;
+        stroke-width: 1px;
 	}
     #timeblock text {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -125,11 +125,16 @@
             .attr('class', 'data');
 
         ge.append("rect")
+            .attr("x", function(d) {return scale.week(weekday[d.wday]) + (scale.week.rangeBand() / 2)})
+            .attr("y", function(d) {return scale.time(d.begin) + ((scale.time(d.end) - scale.time(d.begin)) / 2)})
+			.attr("width", 0)
+			.attr("height", 0)
+            .attr("style", function(d) {return ("color" in d) ? "fill:" + colors(d.color) : null})
+            .transition()
             .attr("x", function(d) {return scale.week(weekday[d.wday])})
             .attr("y", function(d) {return scale.time(d.begin)})
 			.attr("width",  function(d) {return scale.week.rangeBand()})
 			.attr("height", function(d) {return (scale.time(d.end) - scale.time(d.begin))})
-            .attr("style", function(d) {return ("color" in d) ? "fill:" + colors(d.color) : null});
 		ge.append("text")
             .attr("x", function(d) {
                 return scale.week(weekday[d.wday]) + 5})
