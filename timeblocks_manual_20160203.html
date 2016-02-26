@@ -49,7 +49,9 @@
     <script charset="utf-8">
         console.log("script");
 	var timeFmt = d3.time.format.utc('%H.%M'),
-        weekday = 'Mon Tue Wed Thu Fri Sat Sun'.split(' ');
+        weekdaydef = 'Mon Tue Wed Thu Fri Sat Sun'.split(' '),
+        weekdayseq = 'Mon Tue Wed Thu Fri Sat Sun'.split(' '),
+        axes = [null,null,null,null];
 	function hm (i) {
         var s = i.toFixed(2);
         return timeFmt.parse((s.length < 4) ? '0' + s : s);
@@ -102,21 +104,17 @@
                         d3.max(timeData, function(d) {return d.end})])
                     .rangeRound([0, height]),
             days:   d3.scale.ordinal()
-                    .domain(weekday)
+                    .domain(weekdayseq)
                     .rangePoints([0, width]),
             week:   d3.scale.ordinal()
-                    .domain(weekday)
+                    .domain(weekdayseq)
                     .rangeRoundBands([0, width], 0.05),
         }	    	
     }
 
 	function d3Update() {
 		console.log("d3Update");
-        var scale = d3UpdateScales(),
-            xaxis_t = d3.svg.axis().scale(scale.week).tickSize(13).orient('top'),
-            yaxis_r = d3.svg.axis().scale(scale.time).tickSize(7).orient('right');
-            xaxis_b = d3.svg.axis().scale(scale.week).tickSize(13),
-            yaxis_l = d3.svg.axis().scale(scale.time).tickSize(7).orient('left');
+        var scale = d3UpdateScales();
 
 		// Update…
         var svg = d3.select('#timeblock');
@@ -132,7 +130,8 @@
             .attr('class', 'data');
 
         ge.append("rect")
-            .attr("x", function(d) {return scale.week(weekday[d.wday]) + (scale.week.rangeBand() / 2)})
+            .attr("x", function(d) {
+                return scale.week(weekdaydef[d.wday]) + (scale.week.rangeBand() / 2)})
             .attr("y", function(d) {
                 var e = new Date(d.end); e.setMinutes(e.getMinutes() - 5);
                 return scale.time(d.begin) + ((scale.time(e) - scale.time(d.begin)) / 2)})
@@ -140,7 +139,7 @@
             .attr("height", 0)
             .attr("style", function(d) {return ("color" in d) ? "fill:" + colors(d.color) : null})
             .transition()
-            .attr("x", function(d) {return scale.week(weekday[d.wday])})
+            .attr("x", function(d) {return scale.week(weekdaydef[d.wday])})
             .attr("y", function(d) {return scale.time(d.begin)})
             .attr("width",  function(d) {return scale.week.rangeBand()})
             .attr("height", function(d) {
@@ -148,35 +147,59 @@
                 return (scale.time(e) - scale.time(d.begin))})
 		ge.append("text")
             .attr("x", function(d) {
-                return scale.week(weekday[d.wday]) + 5})
+                return scale.week(weekdaydef[d.wday]) + 5})
             .attr("y", function(d) {return scale.time(d.begin)})
             .attr("dy", "1.1em")
 			.text(function(d) { return d.label; });
 		
 		// Exit…
-		g.exit().remove();
-        
-        svg.append("g").attr('class', 'axis')
-            .attr('transform', 'translate('
-                + String(scale.margin.left) + ','
-                + String(scale.margin.top) + ')')
-            .call(xaxis_t);
-        svg.append("g").attr('class', 'axis')
-            .attr('transform', 'translate('
-                + String(scale.margin.left) + ','
-                + String(scale.height + scale.margin.top) + ')')
-            .call(xaxis_b);
-        svg.append("g").attr('class', 'axis')
-            .attr('transform', 'translate('
-                + String(scale.margin.left - 5) + ','
-                + String(scale.margin.top) + ')')
-            .call(yaxis_l);
-        svg.append("g").attr('class', 'axis')
-            .attr('transform', 'translate('
-                + String(scale.margin.left + scale.width + 5) + ','
-                + String(scale.margin.top) + ')')
-            .call(yaxis_r);
+		g.exit().remove();   
+        axesAddOrUpdate(svg);
 	}
+    
+    function axesAddOrUpdate(svg) {
+        var xaxis_t = d3.svg.axis().scale(scale.week).tickSize(13).orient('top'),
+            yaxis_r = d3.svg.axis().scale(scale.time).tickSize(7).orient('right'),
+            xaxis_b = d3.svg.axis().scale(scale.week).tickSize(13),
+            yaxis_l = d3.svg.axis().scale(scale.time).tickSize(7).orient('left');
+        // global axes array contains top, right, bottom, left axis.
+        if (null == axes[0]) {
+            axes[0] = svg.append("g").attr('class', 'axis')
+                .attr('transform', 'translate('
+                    + String(scale.margin.left) + ','
+                    + String(scale.margin.top) + ')')
+                .call(xaxis_t);
+        } else {
+            axes[0].transition().call(xaxis_t);
+        }
+        if (null == axes[2]) {
+            axes[2] = svg.append("g").attr('class', 'axis')
+                .attr('transform', 'translate('
+                    + String(scale.margin.left) + ','
+                    + String(scale.height + scale.margin.top) + ')')
+                .call(xaxis_b);
+        } else {
+            axes[2].transition().call(xaxis_b);
+        }
+        if (null == axes[3]) {
+            axes[3] = svg.append("g").attr('class', 'axis')
+                .attr('transform', 'translate('
+                    + String(scale.margin.left - 5) + ','
+                    + String(scale.margin.top) + ')')
+                .call(yaxis_l);
+        } else {
+            axes[3].transition().call(yaxis_l);
+        }
+        if (null == axes[1]) {
+            axes[1] = svg.append("g").attr('class', 'axis')
+                .attr('transform', 'translate('
+                    + String(scale.margin.left + scale.width + 5) + ','
+                    + String(scale.margin.top) + ')')
+                .call(yaxis_r);
+        } else {
+            axes[1].transition().call(yaxis_r);
+        }
+    }
 	
 	window.onload = d3Update;
 
@@ -184,9 +207,13 @@
 </head>
 
 <body>
-    <h1>A week of blocked time</h1>
+    <h1>A week of blocked time<span id="ed">&hellip;</span></h1>
     <section>
         <svg id="timeblock">
         </svg>
     </section>
 </body>
+<script>
+    var ed = d3.select('#ed');
+    ed[0][0].onClick(function () {weekdayseq.push(weekdayseq.shift()); d3Update();})
+</script>
