@@ -87,7 +87,7 @@
         a:hover.tooltips span {
             visibility: visible;
             opacity: 0.8;
-            top: 30px;
+            top: 40px;
             left: 50%;
             margin-left: -76px;
             z-index: 999;
@@ -137,6 +137,10 @@
     // timeDataMap.forEach(function(k,v) {v.end.setMinutes(v.end.getMinutes()-5);});
     // timeData = timeDataMap.values();
     var scale, colors = d3.scale.category10();
+    colors.range(d3.range(10).map(
+        function(i){
+            return d3.rgb(colors(i)).brighter(1.25).toString();
+            }));
 
     function d3UpdateScales() {
         var svg = d3.select('#timeblock')[0][0],
